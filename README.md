@@ -2,6 +2,8 @@
 
 Official [n8n](https://n8n.io/) community node for [RelayPDF](https://relaypdf.com). HTML, Markdown, URLs, and published Handlebars templates in. Production PDFs out. Chromium and LibreOffice run on RelayPDF, not on the n8n host.
 
+Public source: [timspell1/n8n-nodes-relaypdf](https://github.com/timspell1/n8n-nodes-relaypdf). npm publishes from GitHub Actions with provenance.
+
 ## Install
 
 **Self-hosted:** Settings → Community Nodes → Install `n8n-nodes-relaypdf`.
