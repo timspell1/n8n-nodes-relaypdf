@@ -1,0 +1,80 @@
+{
+  "name": "RelayPDF: Stripe payment to invoice PDF via Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Stripe invoice\n\nMap the Stripe invoice object into `templateData` for a published RelayPDF template. Attach RelayPDF API + Gmail + Stripe credentials.",
+        "height": 220,
+        "width": 340
+      },
+      "id": "note-stripe",
+      "name": "Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-280, -80]
+    },
+    {
+      "parameters": {
+        "events": ["invoice.paid"]
+      },
+      "id": "stripe-trigger",
+      "name": "Stripe Trigger",
+      "type": "n8n-nodes-base.stripeTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inv = $json.data?.object ?? $json;\nreturn [{\n  json: {\n    recipientEmail: inv.customer_email,\n    filename: `invoice-${inv.number || inv.id}.pdf`,\n    templateData: {\n      number: inv.number || inv.id,\n      total: (inv.amount_paid ?? 0) / 100,\n      customer: inv.customer_name || inv.customer_email,\n      currency: (inv.currency || 'usd').toUpperCase()\n    }\n  }\n}];"
+      },
+      "id": "map-stripe",
+      "name": "Map invoice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "resource": "pdf",
+        "operation": "create",
+        "source": "template",
+        "templateId": "invoice",
+        "templateData": "={{ $json.templateData }}",
+        "filename": "={{ $json.filename }}",
+        "responseMode": "binary",
+        "binaryPropertyName": "data"
+      },
+      "id": "relaypdf-stripe",
+      "name": "RelayPDF",
+      "type": "n8n-nodes-relaypdf.relayPdf",
+      "typeVersion": 1,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Map invoice').item.json.recipientEmail }}",
+        "subject": "Your invoice",
+        "emailType": "text",
+        "message": "Thanks for your payment. Invoice attached.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [{ "property": "data" }]
+          }
+        }
+      },
+      "id": "gmail-stripe",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [720, 0]
+    }
+  ],
+  "connections": {
+    "Stripe Trigger": { "main": [[{ "node": "Map invoice", "type": "main", "index": 0 }]] },
+    "Map invoice": { "main": [[{ "node": "RelayPDF", "type": "main", "index": 0 }]] },
+    "RelayPDF": { "main": [[{ "node": "Gmail", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false }
+}

@@ -1,0 +1,87 @@
+{
+  "name": "RelayPDF: template invoice via webhook to Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Template invoice\n\n1. Publish a Handlebars template in the RelayPDF dashboard (slug `invoice`).\n2. Attach a RelayPDF API credential to the RelayPDF node.\n3. Attach Gmail.\n4. POST JSON `{ templateData, recipientEmail, filename? }` to the webhook.",
+        "height": 280,
+        "width": 360
+      },
+      "id": "note-invoice",
+      "name": "Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-280, -80]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "relaypdf-invoice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-invoice",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "relaypdf-invoice"
+    },
+    {
+      "parameters": {
+        "resource": "pdf",
+        "operation": "create",
+        "source": "template",
+        "templateId": "={{ $json.body.templateId || 'invoice' }}",
+        "templateData": "={{ $json.body.templateData }}",
+        "filename": "={{ $json.body.filename || 'invoice.pdf' }}",
+        "responseMode": "binary",
+        "binaryPropertyName": "data"
+      },
+      "id": "relaypdf-invoice",
+      "name": "RelayPDF",
+      "type": "n8n-nodes-relaypdf.relayPdf",
+      "typeVersion": 1,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.recipientEmail }}",
+        "subject": "Your invoice",
+        "emailType": "text",
+        "message": "Your invoice is attached.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              { "property": "data" }
+            ]
+          }
+        }
+      },
+      "id": "gmail-invoice",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, filename: $('RelayPDF').item.json.filename } }}"
+      },
+      "id": "respond-invoice",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "RelayPDF", "type": "main", "index": 0 }]] },
+    "RelayPDF": { "main": [[{ "node": "Gmail", "type": "main", "index": 0 }]] },
+    "Gmail": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false }
+}

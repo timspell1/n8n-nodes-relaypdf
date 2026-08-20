@@ -1,0 +1,14 @@
+{
+  "node": "n8n-nodes-relaypdf.relayPdf",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Development", "Utility"],
+  "resources": {
+    "credentialDocumentation": [
+      { "url": "https://relaypdf.com/integrations/n8n" }
+    ],
+    "primaryDocumentation": [
+      { "url": "https://relaypdf.com/docs/n8n" }
+    ]
+  }
+}

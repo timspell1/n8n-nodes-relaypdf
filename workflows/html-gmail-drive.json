@@ -1,0 +1,92 @@
+{
+  "name": "RelayPDF: HTML report to Gmail and Google Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## HTML report\n\nWebhook receives `{ html, recipientEmail, filename? }`. RelayPDF returns binary field `data`. Gmail attaches it. Drive archives a copy. Pin the Webhook node for the recipient after the binary response.",
+        "height": 240,
+        "width": 360
+      },
+      "id": "note-html",
+      "name": "Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-280, -80]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "relaypdf-html",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-html",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "relaypdf-html"
+    },
+    {
+      "parameters": {
+        "resource": "pdf",
+        "operation": "create",
+        "source": "html",
+        "html": "={{ $json.body.html }}",
+        "filename": "={{ $json.body.filename || 'report.pdf' }}",
+        "responseMode": "binary",
+        "binaryPropertyName": "data"
+      },
+      "id": "relaypdf-html",
+      "name": "RelayPDF",
+      "type": "n8n-nodes-relaypdf.relayPdf",
+      "typeVersion": 1,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.recipientEmail }}",
+        "subject": "Report",
+        "emailType": "text",
+        "message": "Your report is attached.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [{ "property": "data" }]
+          }
+        }
+      },
+      "id": "gmail-html",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [520, -80]
+    },
+    {
+      "parameters": {
+        "name": "={{ $('RelayPDF').item.json.filename }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "mode": "list", "value": "root" },
+        "options": {}
+      },
+      "id": "drive-html",
+      "name": "Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [520, 120]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "RelayPDF", "type": "main", "index": 0 }]] },
+    "RelayPDF": {
+      "main": [
+        [
+          { "node": "Gmail", "type": "main", "index": 0 },
+          { "node": "Google Drive", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false }
+}

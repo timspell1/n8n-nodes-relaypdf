@@ -1,0 +1,68 @@
+{
+  "name": "RelayPDF: Gmail Office attachment to Drive PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Office convert\n\nGmail Trigger downloads the first attachment as binary `data`. RelayPDF Convert File maps that binary to POST /v1/convert (LibreOffice). Google Drive stores the PDF. A 503 `convert_unavailable` is not billed — retry.",
+        "height": 260,
+        "width": 380
+      },
+      "id": "note-convert",
+      "name": "Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-300, -80]
+    },
+    {
+      "parameters": {
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
+        "simple": false,
+        "filters": {},
+        "options": { "downloadAttachments": true, "dataPropertyAttachmentsPrefixName": "data" }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "resource": "convert",
+        "operation": "convert",
+        "binaryPropertyNameIn": "data",
+        "to": "pdf",
+        "engine": "libreoffice",
+        "responseMode": "async",
+        "waitForCompletion": true,
+        "waitTimeoutMs": 120000,
+        "binaryPropertyName": "data"
+      },
+      "id": "relaypdf-convert",
+      "name": "RelayPDF",
+      "type": "n8n-nodes-relaypdf.relayPdf",
+      "typeVersion": 1,
+      "position": [280, 0]
+    },
+    {
+      "parameters": {
+        "name": "={{ $('RelayPDF').item.json.filename }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "mode": "list", "value": "root" },
+        "options": {}
+      },
+      "id": "drive-convert",
+      "name": "Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [540, 0]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": { "main": [[{ "node": "RelayPDF", "type": "main", "index": 0 }]] },
+    "RelayPDF": { "main": [[{ "node": "Google Drive", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false }
+}

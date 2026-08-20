@@ -1,0 +1,84 @@
+{
+  "name": "RelayPDF: daily URL snapshot to Slack and Google Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Dashboard snapshot\n\nThe URL must be reachable by RelayPDF. Private hosts return `url_not_allowed`. `waitUntil` is `networkidle0` so charts can finish painting.",
+        "height": 240,
+        "width": 360
+      },
+      "id": "note-url",
+      "name": "Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-280, -80]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }] }
+      },
+      "id": "schedule-url",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "resource": "pdf",
+        "operation": "create",
+        "source": "url",
+        "url": "https://example.com/dashboard",
+        "filename": "={{ 'dashboard-' + $now.format('yyyy-MM-dd') + '.pdf' }}",
+        "responseMode": "binary",
+        "binaryPropertyName": "data",
+        "additionalOptions": { "waitUntil": "networkidle0", "format": "letter", "printBackground": true }
+      },
+      "id": "relaypdf-url",
+      "name": "RelayPDF",
+      "type": "n8n-nodes-relaypdf.relayPdf",
+      "typeVersion": 1,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": { "__rl": true, "mode": "list", "value": "" },
+        "text": "Daily dashboard PDF",
+        "options": {}
+      },
+      "id": "slack-url",
+      "name": "Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [520, -80]
+    },
+    {
+      "parameters": {
+        "name": "={{ $('RelayPDF').item.json.filename }}",
+        "driveId": { "__rl": true, "mode": "list", "value": "My Drive" },
+        "folderId": { "__rl": true, "mode": "list", "value": "root" },
+        "options": {}
+      },
+      "id": "drive-url",
+      "name": "Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [520, 120]
+    }
+  ],
+  "connections": {
+    "Schedule": { "main": [[{ "node": "RelayPDF", "type": "main", "index": 0 }]] },
+    "RelayPDF": {
+      "main": [
+        [
+          { "node": "Slack", "type": "main", "index": 0 },
+          { "node": "Google Drive", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false }
+}
