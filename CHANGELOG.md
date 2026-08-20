@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Fix GitHub Actions npm OIDC trusted publishing.
+
 ## 0.1.1
 
 - Publish from GitHub Actions with npm provenance for n8n Creator Portal verification.
