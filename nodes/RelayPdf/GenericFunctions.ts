@@ -188,6 +188,17 @@ export function pdfOptionsFromNode(this: IExecuteFunctions, itemIndex: number): 
   if (additional.waitUntil) options.waitUntil = additional.waitUntil;
   if (additional.timeout) options.timeout = additional.timeout;
   if (additional.pageRanges) options.pageRanges = additional.pageRanges;
+  if (additional.waitForSelector) options.waitForSelector = additional.waitForSelector;
+  if (additional.waitForTimeout) options.waitForTimeout = additional.waitForTimeout;
+  if (additional.extraHTTPHeaders) {
+    const headers =
+      typeof additional.extraHTTPHeaders === "string"
+        ? JSON.parse(additional.extraHTTPHeaders)
+        : additional.extraHTTPHeaders;
+    if (headers && typeof headers === "object" && !Array.isArray(headers) && Object.keys(headers).length > 0) {
+      options.extraHTTPHeaders = headers;
+    }
+  }
   if (additional.width) options.width = additional.width;
   if (additional.height) options.height = additional.height;
   if (additional.headerTemplate) options.headerTemplate = additional.headerTemplate;

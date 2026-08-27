@@ -1,9 +1,9 @@
 {
   "name": "n8n-nodes-relaypdf",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "n8n community node for the RelayPDF document API — HTML, Markdown, URL, and Handlebars templates to PDF, Office convert, merge, barcodes, zip, and signed webhooks",
   "license": "MIT",
-  "homepage": "https://relaypdf.com/integrations/n8n",
+  "homepage": "https://relaypdf.com/docs/n8n",
   "author": {
     "name": "RelayPDF",
     "email": "support@relaypdf.com"

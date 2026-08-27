@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Add PDF toolbox operations (stamp, raster, compress, info, text, unlock, form fill) and `Extract Data` (`POST /v1/pdf/data`).
+
 ## 0.1.2
 
 - Fix GitHub Actions npm OIDC trusted publishing.

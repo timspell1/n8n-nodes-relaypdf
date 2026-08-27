@@ -15,7 +15,39 @@ import {
   relayPdfRequest,
 } from "./GenericFunctions";
 
-const generatingOps = ["create", "merge", "extract", "protect", "bookmarks", "convert"];
+const generatingOps = [
+  "create",
+  "merge",
+  "extract",
+  "protect",
+  "bookmarks",
+  "raster",
+  "fromImages",
+  "stamp",
+  "rotate",
+  "deletePages",
+  "compress",
+  "unlock",
+  "formFill",
+  "convert",
+];
+const pdfFileOps = [
+  "extract",
+  "protect",
+  "bookmarks",
+  "raster",
+  "stamp",
+  "rotate",
+  "deletePages",
+  "compress",
+  "unlock",
+  "info",
+  "text",
+  "data",
+  "formFields",
+  "formFill",
+];
+const jsonPdfOps = ["info", "text", "data", "formFields"];
 
 function show(resource: string | string[], operation?: string | string[]): INodeProperties["displayOptions"] {
   return {
@@ -101,6 +133,20 @@ const additionalOptions: INodeProperties = {
         { name: "Network Idle 2", value: "networkidle2" },
       ],
     },
+    { displayName: "Wait For Selector", name: "waitForSelector", type: "string", default: "", placeholder: "#ready" },
+    {
+      displayName: "Wait For Timeout (Ms)",
+      name: "waitForTimeout",
+      type: "number",
+      default: 0,
+      typeOptions: { minValue: 0, maxValue: 30000 },
+    },
+    {
+      displayName: "Extra HTTP Headers",
+      name: "extraHTTPHeaders",
+      type: "json",
+      default: "{}",
+    },
     { displayName: "Width", name: "width", type: "string", default: "" },
   ],
 };
@@ -154,10 +200,22 @@ export class RelayPdf implements INodeType {
         displayOptions: show("pdf"),
         options: [
           { name: "Add Bookmarks", value: "bookmarks", action: "Add PDF bookmarks" },
+          { name: "Compress", value: "compress", action: "Optimize a PDF" },
           { name: "Create", value: "create", action: "Create a PDF" },
+          { name: "Delete Pages", value: "deletePages", action: "Delete PDF pages" },
+          { name: "Extract Data", value: "data", action: "Extract structured PDF data" },
           { name: "Extract Pages", value: "extract", action: "Extract PDF pages" },
-          { name: "Merge", value: "merge", action: 'Merge pd fs' },
-          { name: "Protect", value: "protect", action: 'Password protect a pdf' },
+          { name: "Fill Form", value: "formFill", action: "Fill PDF form fields" },
+          { name: "Form Fields", value: "formFields", action: "List PDF form fields" },
+          { name: "From Images", value: "fromImages", action: "Images to PDF" },
+          { name: "Info", value: "info", action: "Read PDF metadata" },
+          { name: "Merge", value: "merge", action: "Merge PDFs" },
+          { name: "Protect", value: "protect", action: "Password protect a PDF" },
+          { name: "Raster", value: "raster", action: "PDF pages to images" },
+          { name: "Rotate", value: "rotate", action: "Rotate PDF pages" },
+          { name: "Stamp", value: "stamp", action: "Stamp text or image on a PDF" },
+          { name: "Text", value: "text", action: "Extract PDF text" },
+          { name: "Unlock", value: "unlock", action: "Remove PDF password" },
         ],
       },
       {
@@ -339,7 +397,7 @@ export class RelayPdf implements INodeType {
         displayOptions: {
           show: {
             resource: ["pdf", "convert"],
-            operation: ["extract", "protect", "bookmarks", "convert"],
+            operation: ["extract", "protect", "bookmarks", "raster", "stamp", "rotate", "deletePages", "compress", "unlock", "info", "text", "data", "formFields", "formFill", "convert"],
           },
         },
       },
@@ -349,7 +407,7 @@ export class RelayPdf implements INodeType {
         type: "options",
         default: "binary",
         displayOptions: {
-          show: { resource: ["pdf"], operation: ["extract", "protect", "bookmarks"] },
+          show: { resource: ["pdf"], operation: pdfFileOps },
         },
         options: [
           { name: "Binary", value: "binary" },
@@ -362,7 +420,7 @@ export class RelayPdf implements INodeType {
         type: "string",
         default: "",
         displayOptions: {
-          show: { resource: ["pdf"], operation: ["extract", "protect", "bookmarks"], pdfSource: ["url"] },
+          show: { resource: ["pdf"], operation: pdfFileOps, pdfSource: ["url"] },
         },
       },
       {
@@ -371,7 +429,71 @@ export class RelayPdf implements INodeType {
         type: "string",
         default: "1",
         placeholder: "1-3,5",
-        displayOptions: show("pdf", "extract"),
+        displayOptions: {
+          show: { resource: ["pdf"], operation: ["extract", "deletePages", "raster", "rotate", "stamp"] },
+        },
+      },
+      {
+        displayName: "Degrees",
+        name: "degrees",
+        type: "number",
+        default: 90,
+        displayOptions: show("pdf", "rotate"),
+      },
+      {
+        displayName: "Stamp Text",
+        name: "stampText",
+        type: "string",
+        default: "DRAFT",
+        displayOptions: show("pdf", "stamp"),
+      },
+      {
+        displayName: "Unlock Password",
+        name: "unlockPassword",
+        type: "string",
+        typeOptions: { password: true },
+        default: "",
+        displayOptions: show("pdf", "unlock"),
+      },
+      {
+        displayName: "Form Fields",
+        name: "formFields",
+        type: "json",
+        default: '{"Name":"Jane"}',
+        displayOptions: show("pdf", "formFill"),
+      },
+      {
+        displayName: "JSON Schema",
+        name: "dataSchema",
+        type: "json",
+        default: '{"type":"object","properties":{"total":{"type":"number"}}}',
+        description: "Optional JSON Schema. Omit for Markdown per page.",
+        displayOptions: show("pdf", "data"),
+      },
+      {
+        displayName: "Prompt",
+        name: "dataPrompt",
+        type: "string",
+        default: "",
+        description: "Extra extraction instructions",
+        displayOptions: show("pdf", "data"),
+      },
+      {
+        displayName: "OCR",
+        name: "dataOcr",
+        type: "boolean",
+        default: false,
+        description: "Raster pages and send images when the text layer is missing or weak",
+        displayOptions: show("pdf", "data"),
+      },
+      {
+        displayName: "Pages",
+        name: "dataPages",
+        type: "string",
+        default: "",
+        placeholder: "1-3,5",
+        description: "Optional page ranges. Leave blank for every page.",
+        displayOptions: show("pdf", "data"),
       },
       {
         displayName: "User Password",
@@ -404,7 +526,7 @@ export class RelayPdf implements INodeType {
         default: {},
         placeholder: "Add File",
         displayOptions: {
-          show: { resource: ["pdf"], operation: ["merge"] },
+          show: { resource: ["pdf"], operation: ["merge", "fromImages"] },
         },
         options: [
           {
@@ -730,7 +852,14 @@ async function executeItem(
     return generateAndReturn.call(this, i, "/v1/zip", body);
   }
 
-  if (resource === "pdf" && (operation === "extract" || operation === "protect" || operation === "bookmarks")) {
+  if (resource === "pdf" && operation === "fromImages") {
+    const files = await collectFiles.call(this, i, false);
+    const body: IDataObject = { files };
+    if (filename) body.filename = filename;
+    return generateAndReturn.call(this, i, "/v1/pdf/from-images", body);
+  }
+
+  if (resource === "pdf" && pdfFileOps.includes(operation)) {
     const pdfSource = this.getNodeParameter("pdfSource", i, "binary") as string;
     const body: IDataObject = {};
     if (filename) body.filename = filename;
@@ -740,7 +869,10 @@ async function executeItem(
       const file = await fileFromBinary.call(this, i, binaryIn);
       body.file = file.file;
     }
-    if (operation === "extract") body.pages = this.getNodeParameter("pages", i) as string;
+    if (operation === "extract" || operation === "deletePages" || operation === "raster" || operation === "rotate" || operation === "stamp") {
+      const pages = this.getNodeParameter("pages", i, "") as string;
+      if (pages) body.pages = pages;
+    }
     if (operation === "protect") {
       body.userPassword = this.getNodeParameter("userPassword", i) as string;
       const owner = (this.getNodeParameter("ownerPassword", i, "") as string).trim();
@@ -750,7 +882,49 @@ async function executeItem(
       const raw = this.getNodeParameter("bookmarks", i);
       body.bookmarks = typeof raw === "string" ? JSON.parse(raw) : raw;
     }
-    return generateAndReturn.call(this, i, `/v1/pdf/${operation}`, body);
+    if (operation === "rotate") body.degrees = this.getNodeParameter("degrees", i) as number;
+    if (operation === "stamp") body.text = this.getNodeParameter("stampText", i) as string;
+    if (operation === "unlock") body.password = this.getNodeParameter("unlockPassword", i) as string;
+    if (operation === "formFill") {
+      const raw = this.getNodeParameter("formFields", i);
+      body.fields = typeof raw === "string" ? JSON.parse(raw) : raw;
+    }
+    if (operation === "data") {
+      const raw = this.getNodeParameter("dataSchema", i, "") as string | IDataObject;
+      if (raw && !(typeof raw === "string" && raw.trim() === "")) {
+        body.schema = typeof raw === "string" ? JSON.parse(raw) : raw;
+      }
+      const prompt = (this.getNodeParameter("dataPrompt", i, "") as string).trim();
+      if (prompt) body.prompt = prompt;
+      if (this.getNodeParameter("dataOcr", i, false) as boolean) body.ocr = true;
+      const pages = (this.getNodeParameter("dataPages", i, "") as string).trim();
+      if (pages) body.pages = pages;
+    }
+    const pathByOp: Record<string, string> = {
+      extract: "/v1/pdf/extract",
+      protect: "/v1/pdf/protect",
+      bookmarks: "/v1/pdf/bookmarks",
+      raster: "/v1/pdf/raster",
+      stamp: "/v1/pdf/stamp",
+      rotate: "/v1/pdf/rotate",
+      deletePages: "/v1/pdf/delete-pages",
+      compress: "/v1/pdf/compress",
+      unlock: "/v1/pdf/unlock",
+      info: "/v1/pdf/info",
+      text: "/v1/pdf/text",
+      data: "/v1/pdf/data",
+      formFields: "/v1/pdf/form/fields",
+      formFill: "/v1/pdf/form/fill",
+    };
+    const endpoint = pathByOp[operation];
+    if (!endpoint) {
+      throw new NodeOperationError(this.getNode(), `Unsupported operation ${resource}.${operation}`, { itemIndex: i });
+    }
+    if (jsonPdfOps.includes(operation)) {
+      const json = (await relayPdfRequest.call(this, "POST", endpoint, body)) as IDataObject;
+      return { json, pairedItem: { item: i } };
+    }
+    return generateAndReturn.call(this, i, endpoint, body);
   }
 
   if (resource === "barcode" && operation === "create") {
