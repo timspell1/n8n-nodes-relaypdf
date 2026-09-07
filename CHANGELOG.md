@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Add Document → Process for native OCR, PDF/A, crop, resize, repair, optimize, attachments, extract-images, compress, image-convert, and email.
+
 ## 0.1.3
 
 - Add PDF toolbox operations (stamp, raster, compress, info, text, unlock, form fill) and `Extract Data` (`POST /v1/pdf/data`).

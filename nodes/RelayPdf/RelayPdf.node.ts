@@ -15,7 +15,10 @@ import {
   relayPdfRequest,
 } from "./GenericFunctions";
 
+const documentPaths: Record<string, string> = {"ocr": "/v1/pdf/ocr", "pdfa": "/v1/pdf/pdfa", "crop": "/v1/pdf/crop", "resize": "/v1/pdf/resize", "repair": "/v1/pdf/repair", "optimize": "/v1/pdf/optimize", "attachments": "/v1/pdf/attachments", "extract-images": "/v1/pdf/extract-images", "compress": "/v1/pdf/compress-advanced", "image-convert": "/v1/images/convert", "email": "/v1/email"};
+
 const generatingOps = [
+  "process",
   "create",
   "merge",
   "extract",
@@ -175,6 +178,7 @@ export class RelayPdf implements INodeType {
           { name: "Account", value: "account" },
           { name: "Barcode", value: "barcode" },
           { name: "Convert", value: "convert" },
+          { name: "Document", value: "document" },
           { name: "Image", value: "image" },
           { name: "Job", value: "job" },
           { name: "PDF", value: "pdf" },
@@ -182,6 +186,9 @@ export class RelayPdf implements INodeType {
           { name: "Zip", value: "zip" },
         ],
       },
+      {displayName: "Operation", name: "operation", type: "options", noDataExpression: true, default: "process", displayOptions: show("document"), options: [{name: "Process", value: "process", action: "Process a document"}]},
+      {displayName: "Document Tool", name: "documentTool", type: "options", default: "ocr", displayOptions: show("document"), options: Object.keys(documentPaths).map(value => ({name: value, value}))},
+      {displayName: "Document Options", name: "documentOptions", type: "json", default: "{}", displayOptions: show("document"), description: "Operation options such as language, page dimensions, image format or compression preset"},
       {
         displayName: "Operation",
         name: "operation",
@@ -384,7 +391,7 @@ export class RelayPdf implements INodeType {
         default: "",
         displayOptions: {
           show: {
-            resource: ["pdf", "image", "convert", "barcode", "zip"],
+            resource: ["pdf", "image", "convert", "barcode", "zip", "document"],
             operation: generatingOps,
           },
         },
@@ -396,8 +403,8 @@ export class RelayPdf implements INodeType {
         default: "data",
         displayOptions: {
           show: {
-            resource: ["pdf", "convert"],
-            operation: ["extract", "protect", "bookmarks", "raster", "stamp", "rotate", "deletePages", "compress", "unlock", "info", "text", "data", "formFields", "formFill", "convert"],
+            resource: ["pdf", "convert", "document"],
+            operation: ["extract", "protect", "bookmarks", "raster", "stamp", "rotate", "deletePages", "compress", "unlock", "info", "text", "data", "formFields", "formFill", "convert", "process"],
           },
         },
       },
@@ -671,7 +678,7 @@ export class RelayPdf implements INodeType {
         default: "binary",
         displayOptions: {
           show: {
-            resource: ["pdf", "image", "convert", "barcode", "zip"],
+            resource: ["pdf", "image", "convert", "barcode", "zip", "document"],
             operation: generatingOps,
           },
         },
@@ -688,7 +695,7 @@ export class RelayPdf implements INodeType {
         default: "data",
         displayOptions: {
           show: {
-            resource: ["pdf", "image", "convert", "barcode", "zip"],
+            resource: ["pdf", "image", "convert", "barcode", "zip", "document"],
             operation: generatingOps,
             responseMode: ["binary", "async"],
           },
@@ -702,7 +709,7 @@ export class RelayPdf implements INodeType {
         description: "Whether to poll until the async job completes and return file bytes",
         displayOptions: {
           show: {
-            resource: ["pdf", "image", "convert", "barcode", "zip"],
+            resource: ["pdf", "image", "convert", "barcode", "zip", "document"],
             operation: generatingOps,
             responseMode: ["async"],
           },
@@ -715,7 +722,7 @@ export class RelayPdf implements INodeType {
         default: 120000,
         displayOptions: {
           show: {
-            resource: ["pdf", "image", "convert", "barcode", "zip"],
+            resource: ["pdf", "image", "convert", "barcode", "zip", "document"],
             operation: generatingOps,
             responseMode: ["async"],
             waitForCompletion: [true],
@@ -760,6 +767,14 @@ async function executeItem(
   operation: string,
 ): Promise<INodeExecutionData> {
   const filename = (this.getNodeParameter("filename", i, "") as string).trim();
+
+  if (resource === "document" && operation === "process") {
+    const path = documentPaths[this.getNodeParameter("documentTool", i) as string];
+    if (!path) throw new NodeOperationError(this.getNode(), "Unknown document tool.");
+    const input = await fileFromBinary.call(this, i, this.getNodeParameter("binaryPropertyNameIn", i, "data") as string);
+    const options = parseJsonObject.call(this, this.getNodeParameter("documentOptions", i, {}), "Document Options", i);
+    return generateAndReturn.call(this, i, path, {file: input.file, options, ...(filename ? {filename} : {})});
+  }
 
   if (resource === "account" && operation === "get") {
     const json = (await relayPdfRequest.call(this, "GET", "/v1/account")) as IDataObject;

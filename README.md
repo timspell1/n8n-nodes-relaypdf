@@ -37,7 +37,7 @@ HTTP Bearer on every RelayPDF request the node makes (`Authorization: Bearer <ke
 
 Trial wallets: 20 requests/minute. Funded or auto-reload: 60/minute. Burst: 5 / 10 seconds. Empty wallet → `402 payment_required` (not billed).
 
-Ledger unit is millicents (1 = $0.001). Launch HTML PDF is **$0.015**; convert **$0.04**; tools **$0.005**. See [wallet](https://relaypdf.com/docs/wallet).
+Ledger unit is millicents (1 = $0.001). Final HTML PDF is **$0.0004/job + $0.0003/browser second**; convert **$0.0004/job + $0.0005/execution second**; tools **$0.002**. See [wallet](https://relaypdf.com/docs/wallet).
 
 ## Nodes
 
@@ -70,6 +70,7 @@ Default **Response** is **Binary**, output field `data`. Point Gmail, Slack, and
 | PDF | Form Fields | `POST /v1/pdf/form/fields` | List AcroForm fields |
 | PDF | Fill Form | `POST /v1/pdf/form/fill` | Fill and flatten |
 | Convert | Convert File | `POST /v1/convert` | LibreOffice / wkhtmltopdf |
+| Document | Process | native paths | OCR, PDF/A, crop, resize, repair, optimize, attachments, extract-images, compress, image-convert, email |
 | Image | Create | `POST /v1/images` | HTML or URL → png/jpeg/webp |
 | Barcode | Create | `POST /v1/barcodes` | QR / 1D / 2D |
 | Zip | Create | `POST /v1/zip` | Zip files |
