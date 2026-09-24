@@ -70,7 +70,7 @@ Default **Response** is **Binary**, output field `data`. Point Gmail, Slack, and
 | PDF | Form Fields | `POST /v1/pdf/form/fields` | List AcroForm fields |
 | PDF | Fill Form | `POST /v1/pdf/form/fill` | Fill and flatten |
 | Convert | Convert File | `POST /v1/convert` | LibreOffice / wkhtmltopdf |
-| Document | Process | native paths | OCR, PDF/A, crop, resize, repair, optimize, attachments, extract-images, compress, image-convert, email |
+| Document | Process | native paths | OCR, PDF/A, crop, resize, repair, optimize, attachments, extract-images, redact, compress, image-convert, email |
 | Image | Create | `POST /v1/images` | HTML or URL → png/jpeg/webp |
 | Barcode | Create | `POST /v1/barcodes` | QR / 1D / 2D |
 | Zip | Create | `POST /v1/zip` | Zip files |

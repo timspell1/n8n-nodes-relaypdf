@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Add PDF redaction to Document → Process with literal text and page-area options.
+
 ## 0.1.4
 
 - Add Document → Process for native OCR, PDF/A, crop, resize, repair, optimize, attachments, extract-images, compress, image-convert, and email.

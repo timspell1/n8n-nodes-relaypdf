@@ -15,7 +15,7 @@ import {
   relayPdfRequest,
 } from "./GenericFunctions";
 
-const documentPaths: Record<string, string> = {"ocr": "/v1/pdf/ocr", "pdfa": "/v1/pdf/pdfa", "crop": "/v1/pdf/crop", "resize": "/v1/pdf/resize", "repair": "/v1/pdf/repair", "optimize": "/v1/pdf/optimize", "attachments": "/v1/pdf/attachments", "extract-images": "/v1/pdf/extract-images", "compress": "/v1/pdf/compress-advanced", "image-convert": "/v1/images/convert", "email": "/v1/email"};
+const documentPaths: Record<string, string> = {"redact": "/v1/pdf/redact", "ocr": "/v1/pdf/ocr", "pdfa": "/v1/pdf/pdfa", "crop": "/v1/pdf/crop", "resize": "/v1/pdf/resize", "repair": "/v1/pdf/repair", "optimize": "/v1/pdf/optimize", "attachments": "/v1/pdf/attachments", "extract-images": "/v1/pdf/extract-images", "compress": "/v1/pdf/compress-advanced", "image-convert": "/v1/images/convert", "email": "/v1/email"};
 
 const generatingOps = [
   "process",
